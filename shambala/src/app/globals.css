@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+/* ============================================================
+   SHAMBALA — Design System
+   Mobile-first construction site expense manager
+   ============================================================ */
+
+@theme {
+  /* Core palette — warm, earthy tones for construction context */
+  --color-bg-primary: #0a0a0f;
+  --color-bg-secondary: #12121a;
+  --color-bg-card: #1a1a25;
+  --color-bg-elevated: #222233;
+  --color-bg-input: #1e1e2d;
+
+  --color-accent: #6c5ce7;
+  --color-accent-light: #a29bfe;
+  --color-accent-glow: rgba(108, 92, 231, 0.15);
+
+  --color-green: #00b894;
+  --color-green-light: #55efc4;
+  --color-green-glow: rgba(0, 184, 148, 0.15);
+
+  --color-red: #e17055;
+  --color-red-light: #fab1a0;
+
+  --color-amber: #fdcb6e;
+  --color-amber-dark: #e17055;
+
+  --color-text-primary: #f1f1f5;
+  --color-text-secondary: #8e8ea0;
+  --color-text-muted: #5a5a6e;
+
+  --color-border: #2a2a3a;
+  --color-border-light: #333348;
+
+  /* Shadows */
+  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-elevated: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-glow-accent: 0 0 20px rgba(108, 92, 231, 0.3);
+  --shadow-glow-green: 0 0 20px rgba(0, 184, 148, 0.3);
+}
+
+/* ============================================================
+   BASE
+   ============================================================ */
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  overflow-x: hidden;
+}
+
+/* ============================================================
+   SMOOTH SCROLLING & SCROLLBAR
+   ============================================================ */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(100%); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Staggered animation delays for list items */
+.stagger-1 { animation-delay: 0.05s; animation-fill-mode: backwards; }
+.stagger-2 { animation-delay: 0.1s; animation-fill-mode: backwards; }
+.stagger-3 { animation-delay: 0.15s; animation-fill-mode: backwards; }
+.stagger-4 { animation-delay: 0.2s; animation-fill-mode: backwards; }
+
+/* ============================================================
+   GLASSMORPHISM
+   ============================================================ */
+
+.glass {
+  background: rgba(26, 26, 37, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+}
+
+.glass-elevated {
+  background: rgba(34, 34, 51, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-border-light);
+}
+
+/* ============================================================
+   MOBILE NUMERIC INPUT — remove spin buttons
+   ============================================================ */
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
