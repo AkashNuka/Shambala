@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createSalaryRecord } from '@/actions/salary';
-import { getParties } from '@/actions/parties';
+import { getParties, createParty } from '@/actions/parties';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { PAYMENT_METHOD_LABELS } from '@/lib/constants';
 
@@ -28,9 +28,12 @@ export default function AddSalaryPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const parties = await getParties();
-        setEmployees(parties.filter(p => p.class === 'person'));
-        setCashProviders(parties.filter(p => p.class === 'person'));
+        const [salariedParties, investorParties] = await Promise.all([
+          getParties(undefined, 'salaried'),
+          getParties(undefined, 'investor'),
+        ]);
+        setEmployees(salariedParties);
+        setCashProviders(investorParties);
       } catch (err) {
         console.error('Failed to load master data', err);
       } finally {
@@ -39,6 +42,34 @@ export default function AddSalaryPage() {
     }
     loadData();
   }, []);
+
+  async function handleAddEmployee(name: string) {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      const party = await createParty({ name, class: 'person', role: 'salaried' });
+      setEmployees(prev => [...prev, party]);
+      setEmployeeId(party.id);
+    } catch (err) {
+      alert('Failed to add employee');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleAddCashProvider(name: string) {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      const party = await createParty({ name, class: 'person', role: 'investor' });
+      setCashProviders(prev => [...prev, party]);
+      setCashProviderId(party.id);
+    } catch (err) {
+      alert('Failed to add cash provider');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -86,6 +117,8 @@ export default function AddSalaryPage() {
             value={employeeId}
             onChange={setEmployeeId}
             placeholder="🔍 Select Person"
+            onAddNew={(name) => handleAddEmployee(name || 'New Employee')}
+            addNewLabel="Add Employee"
           />
 
           <div>
@@ -136,6 +169,8 @@ export default function AddSalaryPage() {
             value={cashProviderId}
             onChange={setCashProviderId}
             placeholder="🔍 Search person"
+            onAddNew={(name) => handleAddCashProvider(name || 'New Person')}
+            addNewLabel="Add Person"
           />
 
           <div>

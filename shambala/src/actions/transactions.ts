@@ -27,7 +27,7 @@ export async function getActivityFeed(
     .select('id, date, amount, comments, worker:parties!labour_records_worker_id_fkey(name), work_type:work_types(name)')
     .eq('project_id', DEFAULT_PROJECT_ID)
     .order('date', { ascending: false })
-    .limit(limit);
+    .limit(filters?.search ? 1000 : limit);
 
   if (filters?.dateFrom) labourQuery.gte('date', filters.dateFrom);
   if (filters?.dateTo) labourQuery.lte('date', filters.dateTo);
@@ -38,7 +38,7 @@ export async function getActivityFeed(
     .select('id, start_date, amount, comments, food_category:food_categories(name), shop:parties!food_records_shop_id_fkey(name)')
     .eq('project_id', DEFAULT_PROJECT_ID)
     .order('start_date', { ascending: false })
-    .limit(limit);
+    .limit(filters?.search ? 1000 : limit);
 
   if (filters?.dateFrom) foodQuery.gte('start_date', filters.dateFrom);
   if (filters?.dateTo) foodQuery.lte('start_date', filters.dateTo);
@@ -49,7 +49,7 @@ export async function getActivityFeed(
     .select('id, date, amount, hours, comments, machine:machinery(machine_id, machine_type)')
     .eq('project_id', DEFAULT_PROJECT_ID)
     .order('date', { ascending: false })
-    .limit(limit);
+    .limit(filters?.search ? 1000 : limit);
 
   if (filters?.dateFrom) machineryQuery.gte('date', filters.dateFrom);
   if (filters?.dateTo) machineryQuery.lte('date', filters.dateTo);
@@ -60,7 +60,7 @@ export async function getActivityFeed(
     .select('id, payment_date, amount, comments, employee:parties!salary_records_employee_id_fkey(name)')
     .eq('project_id', DEFAULT_PROJECT_ID)
     .order('payment_date', { ascending: false })
-    .limit(limit);
+    .limit(filters?.search ? 1000 : limit);
 
   if (filters?.dateFrom) salaryQuery.gte('payment_date', filters.dateFrom);
   if (filters?.dateTo) salaryQuery.lte('payment_date', filters.dateTo);
@@ -71,7 +71,7 @@ export async function getActivityFeed(
     .select('id, date, material_cost, quantity, unit, comments, material:materials(name), supplier:parties!material_deliveries_supplier_id_fkey(name)')
     .eq('project_id', DEFAULT_PROJECT_ID)
     .order('date', { ascending: false })
-    .limit(limit);
+    .limit(filters?.search ? 1000 : limit);
 
   if (filters?.dateFrom) materialQuery.gte('date', filters.dateFrom);
   if (filters?.dateTo) materialQuery.lte('date', filters.dateTo);
@@ -83,7 +83,7 @@ export async function getActivityFeed(
     .eq('project_id', DEFAULT_PROJECT_ID)
     .in('type', ['money_in', 'transfer'])
     .order('date', { ascending: false })
-    .limit(limit);
+    .limit(filters?.search ? 1000 : limit);
 
   if (filters?.dateFrom) moneyQuery.gte('date', filters.dateFrom);
   if (filters?.dateTo) moneyQuery.lte('date', filters.dateTo);

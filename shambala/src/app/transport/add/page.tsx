@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createStandaloneTransportRecord } from '@/actions/transport';
-import { getParties } from '@/actions/parties';
+import { getParties, createParty } from '@/actions/parties';
 import { getTransportVehicles } from '@/actions/master';
 import { SearchableSelect } from '@/components/SearchableSelect';
 import { PAYMENT_METHOD_LABELS } from '@/lib/constants';
@@ -32,13 +32,13 @@ export default function AddTransportPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [vehs, parties] = await Promise.all([
+        const [vehs, investorParties] = await Promise.all([
           getTransportVehicles(),
-          getParties(),
+          getParties(undefined, 'investor'),
         ]);
         
         setVehicles(vehs);
-        setCashProviders(parties.filter(p => p.class === 'person'));
+        setCashProviders(investorParties);
       } catch (err) {
         console.error('Failed to load master data', err);
       } finally {
@@ -47,6 +47,20 @@ export default function AddTransportPage() {
     }
     loadData();
   }, []);
+
+  async function handleAddCashProvider(name: string) {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      const party = await createParty({ name, class: 'person', role: 'investor' });
+      setCashProviders(prev => [...prev, party]);
+      setCashProviderId(party.id);
+    } catch (err) {
+      alert('Failed to add cash provider');
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -159,6 +173,8 @@ export default function AddTransportPage() {
             value={cashProviderId}
             onChange={setCashProviderId}
             placeholder="🔍 Search person"
+            onAddNew={(name) => handleAddCashProvider(name || 'New Person')}
+            addNewLabel="Add Person"
           />
 
           <div>

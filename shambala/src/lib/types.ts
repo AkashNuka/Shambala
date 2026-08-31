@@ -45,6 +45,7 @@ export interface WorkType {
 export interface Party {
   id: string;
   class: PartyClass;
+  role: string;
   name: string;
   worker_type_id?: string;
   phone?: string;

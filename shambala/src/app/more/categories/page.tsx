@@ -155,7 +155,6 @@ export default function CategoriesPage() {
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-accent"
-            autoFocus
           />
           <button
             type="submit"

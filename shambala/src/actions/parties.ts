@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { DEFAULT_PROJECT_ID } from '@/lib/constants';
 import type { Party } from '@/lib/types';
 
-export async function getParties(search?: string): Promise<Party[]> {
+export async function getParties(search?: string, role?: string): Promise<Party[]> {
   const supabase = await createClient();
 
   let query = supabase
@@ -16,6 +16,10 @@ export async function getParties(search?: string): Promise<Party[]> {
 
   if (search) {
     query = query.ilike('name', `%${search}%`);
+  }
+  
+  if (role) {
+    query = query.eq('role', role);
   }
 
   const { data, error } = await query;
@@ -32,6 +36,7 @@ export async function createParty(data: Partial<Party>): Promise<Party> {
       project_id: DEFAULT_PROJECT_ID,
       name: data.name?.trim(),
       class: data.class || 'person',
+      role: data.role || 'general',
       worker_type_id: data.worker_type_id || null,
       phone: data.phone || null,
       notes: data.notes || null,

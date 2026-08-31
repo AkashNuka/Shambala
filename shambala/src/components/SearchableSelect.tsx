@@ -13,7 +13,7 @@ interface SearchableSelectProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
-  onAddNew?: () => void;
+  onAddNew?: (searchVal?: string) => void;
   addNewLabel?: string;
   label?: string;
   storageKey?: string; // Key to persist recent selections
@@ -97,6 +97,8 @@ export function SearchableSelect({
     return { recentOptions: [], normalOptions: options };
   }, [options, search, recents]);
 
+  const displayedNormalOptions = useMemo(() => normalOptions.slice(0, 50), [normalOptions]);
+
   const renderOption = (opt: Option) => (
     <div
       key={opt.id}
@@ -149,7 +151,6 @@ export function SearchableSelect({
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">🔍</span>
               <input
                 type="text"
-                autoFocus
                 placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -173,7 +174,12 @@ export function SearchableSelect({
                     <div className="h-px bg-border my-2 mx-2" />
                   </div>
                 )}
-                {normalOptions.map(renderOption)}
+                {displayedNormalOptions.map(renderOption)}
+                {normalOptions.length > 50 && (
+                  <div className="text-center py-2 text-xs text-text-muted italic">
+                    Showing top 50 results. Keep typing to filter more.
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -185,11 +191,11 @@ export function SearchableSelect({
                 type="button"
                 onClick={() => {
                   setIsOpen(false);
-                  onAddNew();
+                  onAddNew(search);
                 }}
                 className="w-full py-2.5 bg-accent/10 text-accent hover:bg-accent/20 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"
               >
-                <span>+</span> {addNewLabel}
+                <span>+</span> {search.trim() ? `Add "${search.trim()}"` : addNewLabel}
               </button>
             </div>
           )}

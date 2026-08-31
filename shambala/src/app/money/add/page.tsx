@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { addMoneyIn } from '@/actions/money';
 import { getAccounts } from '@/actions/accounts';
-import { getParties } from '@/actions/parties';
+import { getParties, createParty } from '@/actions/parties';
 import { SearchableSelect } from '@/components/SearchableSelect';
 
 export default function MoneyInPage() {
@@ -26,10 +26,10 @@ export default function MoneyInPage() {
       try {
         const [accs, parties] = await Promise.all([
           getAccounts(),
-          getParties(),
+          getParties(undefined, 'investor'),
         ]);
         setAccounts(accs);
-        setPeople(parties.filter((p: any) => p.class === 'person'));
+        setPeople(parties);
         // Default to first account
         if (accs.length > 0) {
           const defaultAcc = accs.find((a: any) => a.is_default) || accs[0];
@@ -60,6 +60,21 @@ export default function MoneyInPage() {
     } catch (err) {
       console.error(err);
       alert('Failed to record money in');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleAddPerson(name: string) {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      const newParty = await createParty({ name, class: 'person', role: 'investor' });
+      setPeople([...people, newParty]);
+      setPartyId(newParty.id);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to create person');
     } finally {
       setSaving(false);
     }
@@ -97,7 +112,6 @@ export default function MoneyInPage() {
               onChange={(e) => setAmount(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-4 text-green focus:outline-none focus:border-green transition-colors text-3xl font-bold text-center"
               placeholder="0"
-              autoFocus
             />
           </div>
 
@@ -133,6 +147,8 @@ export default function MoneyInPage() {
             value={partyId}
             onChange={setPartyId}
             placeholder="🔍 Search person (optional)"
+            onAddNew={(name) => handleAddPerson(name || 'New Person')}
+            addNewLabel="Add Person"
           />
 
           {/* Description */}

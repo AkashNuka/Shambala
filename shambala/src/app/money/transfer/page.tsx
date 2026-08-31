@@ -93,7 +93,6 @@ export default function TransferPage() {
               onChange={(e) => setAmount(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-4 text-accent-light focus:outline-none focus:border-accent transition-colors text-3xl font-bold text-center"
               placeholder="0"
-              autoFocus
             />
           </div>
 

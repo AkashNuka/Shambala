@@ -64,6 +64,7 @@ CREATE TABLE parties (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   class party_class NOT NULL,
+  role TEXT DEFAULT 'general',
   name TEXT NOT NULL,
   worker_type_id UUID REFERENCES worker_types(id) ON DELETE SET NULL, -- for people
   phone TEXT,

@@ -6,7 +6,6 @@ import { createLabourRecord } from '@/actions/labour';
 import { getParties, createParty } from '@/actions/parties';
 import { getBuildings, getWorkTypes } from '@/actions/master';
 import { SearchableSelect } from '@/components/SearchableSelect';
-import { Modal } from '@/components/Modal';
 import { PAYMENT_METHOD_LABELS } from '@/lib/constants';
 
 export default function AddLabourPage() {
@@ -31,10 +30,7 @@ export default function AddLabourPage() {
   const [comments, setComments] = useState('');
   const [showMore, setShowMore] = useState(false);
 
-  // Modal State
-  const [isWorkerModalOpen, setIsWorkerModalOpen] = useState(false);
-  const [newWorkerName, setNewWorkerName] = useState('');
-  const [newWorkerPhone, setNewWorkerPhone] = useState('');
+  // Modal State removed in favor of inline creation
 
   // Form persistence
   useEffect(() => {
@@ -62,15 +58,16 @@ export default function AddLabourPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [parties, bldgs, works] = await Promise.all([
-          getParties(),
+        const [labourParties, investorParties, bldgs, works] = await Promise.all([
+          getParties(undefined, 'labour'),
+          getParties(undefined, 'investor'),
           getBuildings(),
           getWorkTypes(),
         ]);
         
         // Filter parties for dropdowns
-        setWorkers(parties.filter(p => p.class === 'person'));
-        setCashProviders(parties.filter(p => p.class === 'person'));
+        setWorkers(labourParties);
+        setCashProviders(investorParties);
         setBuildings(bldgs);
         setWorkTypes(works);
       } catch (err) {
@@ -82,24 +79,31 @@ export default function AddLabourPage() {
     loadData();
   }, []);
 
-  async function handleAddWorker(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newWorkerName.trim()) return;
-    
+  async function handleAddWorker(name: string) {
+    if (!name.trim()) return;
+    setSaving(true);
     try {
-      const party = await createParty({ 
-        name: newWorkerName, 
-        class: 'person', 
-        phone: newWorkerPhone || undefined 
-      });
+      const party = await createParty({ name, class: 'person', role: 'labour' });
       setWorkers(prev => [...prev, party]);
-      setCashProviders(prev => [...prev, party]);
       setWorkerId(party.id);
-      setIsWorkerModalOpen(false);
-      setNewWorkerName('');
-      setNewWorkerPhone('');
     } catch (err) {
       alert('Failed to add worker');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleAddCashProvider(name: string) {
+    if (!name.trim()) return;
+    setSaving(true);
+    try {
+      const party = await createParty({ name, class: 'person', role: 'investor' });
+      setCashProviders(prev => [...prev, party]);
+      setCashProviderId(party.id);
+    } catch (err) {
+      alert('Failed to add cash provider');
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -157,8 +161,8 @@ export default function AddLabourPage() {
             value={workerId}
             onChange={setWorkerId}
             placeholder="🔍 Search worker"
-            onAddNew={() => setIsWorkerModalOpen(true)}
-            addNewLabel="Add New Worker"
+            onAddNew={(name) => handleAddWorker(name || 'New Worker')}
+            addNewLabel="Add Worker"
             storageKey="workers"
           />
 
@@ -226,6 +230,8 @@ export default function AddLabourPage() {
               value={cashProviderId}
               onChange={setCashProviderId}
               placeholder="🔍 Search person"
+              onAddNew={(name) => handleAddCashProvider(name || 'New Person')}
+              addNewLabel="Add Person"
             />
 
             <div>
@@ -275,36 +281,7 @@ export default function AddLabourPage() {
         </button>
       </form>
 
-      {/* Add Worker Modal */}
-      <Modal 
-        isOpen={isWorkerModalOpen} 
-        onClose={() => setIsWorkerModalOpen(false)} 
-        title="Add New Worker"
-      >
-        <form onSubmit={handleAddWorker} className="space-y-4">
-          <input
-            type="text"
-            required
-            placeholder="Name"
-            value={newWorkerName}
-            onChange={(e) => setNewWorkerName(e.target.value)}
-            className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-accent"
-          />
-          <input
-            type="tel"
-            placeholder="Phone (Optional)"
-            value={newWorkerPhone}
-            onChange={(e) => setNewWorkerPhone(e.target.value)}
-            className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-text focus:outline-none focus:border-accent"
-          />
-          <button 
-            type="submit" 
-            className="w-full py-3 bg-accent text-white font-bold rounded-xl active:scale-[0.98] transition-transform"
-          >
-            Add Worker
-          </button>
-        </form>
-      </Modal>
+      {/* Add Worker Modal removed */}
     </div>
   );
 }
