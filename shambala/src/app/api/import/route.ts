@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
           .insert({
             project_id: DEFAULT_PROJECT_ID,
             type,
-            date: d.date || new Date().toISOString().split('T')[0],
+            date: d.date || new Date().toLocaleDateString('en-CA'),
             amount: d.amount,
             account_id: accountId,
             category_id: d.categoryId || null,

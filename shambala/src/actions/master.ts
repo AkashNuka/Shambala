@@ -78,11 +78,12 @@ export async function getFuelTypes() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('fuel_types')
-    .select('*')
-    .eq('project_id', DEFAULT_PROJECT_ID);
+    .select('name')
+    .eq('project_id', DEFAULT_PROJECT_ID)
+    .order('name');
   
   if (error) throw new Error('Failed to load fuel types');
-  return data;
+  return data || [];
 }
 
 export async function getFoodCategories() {

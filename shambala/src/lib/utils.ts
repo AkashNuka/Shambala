@@ -1,8 +1,10 @@
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
 
-/** Format amount with ₹ symbol and Indian numbering */
+import { CURRENCY } from './constants';
+
+/** Format amount with currency symbol and numbering */
 export function formatCurrency(amount: number): string {
-  return '₹' + amount.toLocaleString('en-IN', {
+  return CURRENCY + amount.toLocaleString('en-IN', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   });
@@ -13,7 +15,7 @@ export function formatDate(dateStr: string): string {
   const date = parseISO(dateStr);
   if (isToday(date)) return 'Today';
   if (isYesterday(date)) return 'Yesterday';
-  return format(date, 'd MMM yyyy');
+  return format(date, 'dd-MM-yyyy');
 }
 
 /** Format date as short label (for cards) */

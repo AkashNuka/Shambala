@@ -1,3 +1,5 @@
+import { CURRENCY } from '@/lib/constants';
+import { useToast } from '@/components/Toast';
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,6 +9,7 @@ import { getAccounts } from '@/actions/accounts';
 import { SearchableSelect } from '@/components/SearchableSelect';
 
 export default function TransferPage() {
+  const toast = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -16,7 +19,7 @@ export default function TransferPage() {
   const [amount, setAmount] = useState('');
   const [fromAccountId, setFromAccountId] = useState('');
   const [toAccountId, setToAccountId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [description, setDescription] = useState('');
 
   useEffect(() => {
@@ -37,7 +40,7 @@ export default function TransferPage() {
     e.preventDefault();
     if (!amount || !fromAccountId || !toAccountId) return;
     if (fromAccountId === toAccountId) {
-      alert('Please select different accounts');
+      toast.error('Please select different accounts');
       return;
     }
     setSaving(true);
@@ -52,7 +55,7 @@ export default function TransferPage() {
       router.push('/money');
     } catch (err) {
       console.error(err);
-      alert('Failed to create transfer');
+      toast.error('Failed to create transfer');
     } finally {
       setSaving(false);
     }
@@ -84,7 +87,7 @@ export default function TransferPage() {
           {/* Amount */}
           <div>
             <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-              Amount (₹)
+              Amount ({CURRENCY})
             </label>
             <input
               type="number"

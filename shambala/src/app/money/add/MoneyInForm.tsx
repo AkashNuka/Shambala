@@ -1,3 +1,5 @@
+import { CURRENCY } from '@/lib/constants';
+import { useToast } from '@/components/Toast';
 'use client';
 
 import { useState } from 'react';
@@ -7,6 +9,7 @@ import { createParty } from '@/actions/parties';
 import { SearchableSelect } from '@/components/SearchableSelect';
 
 export function MoneyInForm({ initialAccounts, initialPeople }: { initialAccounts: any[], initialPeople: any[] }) {
+  const toast = useToast();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
 
@@ -16,7 +19,7 @@ export function MoneyInForm({ initialAccounts, initialPeople }: { initialAccount
   const [amount, setAmount] = useState('');
   const [accountId, setAccountId] = useState(initialAccounts.length > 0 ? (initialAccounts.find((a: any) => a.is_default)?.id || initialAccounts[0].id) : '');
   const [partyId, setPartyId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [description, setDescription] = useState('');
 
   async function handleSubmit(e: React.FormEvent) {
@@ -34,7 +37,7 @@ export function MoneyInForm({ initialAccounts, initialPeople }: { initialAccount
       router.push('/money');
     } catch (err) {
       console.error(err);
-      alert('Failed to record money in');
+      toast.error('Failed to record money in');
     } finally {
       setSaving(false);
     }
@@ -49,7 +52,7 @@ export function MoneyInForm({ initialAccounts, initialPeople }: { initialAccount
       setPartyId(newParty.id);
     } catch (err) {
       console.error(err);
-      alert('Failed to create person');
+      toast.error('Failed to create person');
     } finally {
       setSaving(false);
     }
@@ -75,7 +78,7 @@ export function MoneyInForm({ initialAccounts, initialPeople }: { initialAccount
         <div className="bg-bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
           <div>
             <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-              Amount (₹)
+              Amount ({CURRENCY})
             </label>
             <input
               type="number"

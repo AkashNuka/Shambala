@@ -1,3 +1,4 @@
+import { useToast } from '@/components/Toast';
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -5,6 +6,7 @@ import { deleteParty } from '@/actions/parties';
 import { useState } from 'react';
 
 export function DeletePartyButton({ partyId, partyName }: { partyId: string, partyName: string }) {
+  const toast = useToast();
   const router = useRouter();
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -16,7 +18,7 @@ export function DeletePartyButton({ partyId, partyName }: { partyId: string, par
         router.push('/more/people');
       } catch (err) {
         console.error(err);
-        alert('Failed to delete person');
+        toast.error('Failed to delete person');
         setIsDeleting(false);
       }
     }

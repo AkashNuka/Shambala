@@ -1,3 +1,5 @@
+import { CURRENCY } from '@/lib/constants';
+import { useToast } from '@/components/Toast';
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -20,6 +22,7 @@ export function MaterialsForm({
   initialWeighbridges: any[];
   accounts: any[];
 }) {
+  const toast = useToast();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   
@@ -30,7 +33,7 @@ export function MaterialsForm({
   const [variantId, setVariantId] = useState('');
   const [supplierId, setSupplierId] = useState('');
   const [buildingId, setBuildingId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('Tonnes');
   const [materialCost, setMaterialCost] = useState('');
@@ -95,7 +98,7 @@ export function MaterialsForm({
       );
       router.push('/');
     } catch (err) {
-      alert('Failed to save material delivery');
+      toast.error('Failed to save material delivery');
       console.error(err);
     } finally {
       setSaving(false);
@@ -192,7 +195,7 @@ export function MaterialsForm({
               value={materialCost}
               onChange={e => setMaterialCost(e.target.value)}
               className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-accent text-xl font-bold"
-              placeholder="₹0.00"
+              placeholder={`\${CURRENCY}0.00`}
             />
           </div>
         </div>
@@ -229,7 +232,7 @@ export function MaterialsForm({
                   value={transportCost}
                   onChange={e => setTransportCost(e.target.value)}
                   className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-accent"
-                  placeholder="₹0.00"
+                  placeholder={`\${CURRENCY}0.00`}
                 />
               </div>
             </div>
@@ -299,7 +302,7 @@ export function MaterialsForm({
                   value={weighbridgeFee}
                   onChange={e => setWeighbridgeFee(e.target.value)}
                   className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-accent"
-                  placeholder="₹0.00"
+                  placeholder={`\${CURRENCY}0.00`}
                 />
               </div>
             </div>
@@ -321,11 +324,11 @@ export function MaterialsForm({
           <div>
             <p className="text-xs font-semibold text-accent uppercase tracking-wider">Total Landed Cost</p>
             {quantity && netWeight > 0 && (
-              <p className="text-xs text-text-muted mt-0.5">₹{(landedCost / netWeight).toFixed(2)} / unit</p>
+              <p className="text-xs text-text-muted mt-0.5">{CURRENCY}{(landedCost / netWeight).toFixed(2)} / unit</p>
             )}
           </div>
           <div className="text-2xl font-bold text-accent">
-            ₹{landedCost.toFixed(2)}
+            {CURRENCY}{landedCost.toFixed(2)}
           </div>
         </div>
 

@@ -74,17 +74,21 @@ export async function getParty(id: string): Promise<Party> {
   return data as Party;
 }
 
-export async function getPartyTransactions(partyId: string) {
+export async function getPartyTransactions(partyId: string, dateFrom?: string, dateTo?: string) {
   const supabase = await createClient();
   
   // Get all transactions where this party is involved
-  const { data, error } = await supabase
+  let query = supabase
     .from('transactions')
-    .select('*')
+    .select('*, account:accounts(name, type)')
     .eq('party_id', partyId)
-    .order('date', { ascending: false })
-    .order('created_at', { ascending: false });
+    .order('date', { ascending: true })
+    .order('created_at', { ascending: true });
 
+  if (dateFrom) query = query.gte('date', dateFrom);
+  if (dateTo) query = query.lte('date', dateTo);
+
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return data;
 }

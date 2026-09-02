@@ -81,8 +81,12 @@ export async function getThisMonthSpent(): Promise<number> {
   const supabase = await createClient();
 
   const now = new Date();
-  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  
+  const firstDay = `${year}-${String(month).padStart(2, '0')}-01`;
+  const lastDate = new Date(year, month, 0).getDate();
+  const lastDay = `${year}-${String(month).padStart(2, '0')}-${String(lastDate).padStart(2, '0')}`;
 
   const { data, error } = await supabase
     .from('transactions')

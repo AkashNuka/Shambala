@@ -1,3 +1,5 @@
+import { CURRENCY } from '@/lib/constants';
+import { useToast } from '@/components/Toast';
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,12 +21,13 @@ export function MachineryForm({
   initialProviders: any[];
   accounts: any[];
 }) {
+  const toast = useToast();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   
   // Machinery State
   const [machineryId, setMachineryId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [startMeter, setStartMeter] = useState('');
   const [endMeter, setEndMeter] = useState('');
   const [totalHours, setTotalHours] = useState('');
@@ -78,7 +81,7 @@ export function MachineryForm({
       router.push('/');
     } catch (err) {
       console.error(err);
-      alert('Failed to save machinery record');
+      toast.error('Failed to save machinery record');
     } finally {
       setSaving(false);
     }
@@ -165,7 +168,7 @@ export function MachineryForm({
 
           <div>
             <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-              Machine Rent/Cost (₹)
+              Machine Rent/Cost ({CURRENCY})
             </label>
             <input 
               type="number" 
@@ -224,7 +227,7 @@ export function MachineryForm({
                     value={fuelCost}
                     onChange={e => setFuelCost(e.target.value)}
                     className="w-full bg-bg border border-border rounded-xl px-4 py-3 text-text outline-none focus:border-accent font-bold text-accent"
-                    placeholder="₹0.00"
+                    placeholder={`\${CURRENCY}0.00`}
                   />
                 </div>
               </div>

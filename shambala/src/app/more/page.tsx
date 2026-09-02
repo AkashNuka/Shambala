@@ -1,5 +1,5 @@
 import Link from 'next/link';
-
+import { APP_NAME } from '@/lib/constants';
 const MENU_ITEMS = [
   {
     section: 'Data',
@@ -19,7 +19,7 @@ const MENU_ITEMS = [
   {
     section: 'About',
     items: [
-      { href: '', icon: '🏗️', label: 'Shambala v1.0', desc: 'Construction Site Expense Manager' },
+      { href: '', icon: '🏗️', label: `${APP_NAME} v1.0`, desc: 'Construction Site Expense Manager' },
     ],
   },
 ];

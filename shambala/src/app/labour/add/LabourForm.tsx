@@ -1,3 +1,5 @@
+import { CURRENCY } from '@/lib/constants';
+import { useToast } from '@/components/Toast';
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -20,6 +22,7 @@ export function LabourForm({
   initialWorkTypes: any[];
   accounts: any[];
 }) {
+  const toast = useToast();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   
@@ -31,7 +34,7 @@ export function LabourForm({
   const [workerId, setWorkerId] = useState('');
   const [workTypeId, setWorkTypeId] = useState('');
   const [buildingId, setBuildingId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [cashProviderId, setCashProviderId] = useState('');
@@ -69,7 +72,7 @@ export function LabourForm({
       setWorkers(prev => [...prev, party]);
       setWorkerId(party.id);
     } catch (err) {
-      alert('Failed to add worker');
+      toast.error('Failed to add worker');
     } finally {
       setSaving(false);
     }
@@ -83,7 +86,7 @@ export function LabourForm({
       setCashProviders(prev => [...prev, party]);
       setCashProviderId(party.id);
     } catch (err) {
-      alert('Failed to add cash provider');
+      toast.error('Failed to add cash provider');
     } finally {
       setSaving(false);
     }
@@ -108,7 +111,7 @@ export function LabourForm({
       router.push('/');
     } catch (err) {
       console.error(err);
-      alert('Failed to save labour record');
+      toast.error('Failed to save labour record');
     } finally {
       setSaving(false);
     }
@@ -176,7 +179,7 @@ export function LabourForm({
 
           <div>
             <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-              Amount (₹)
+              Amount ({CURRENCY})
             </label>
             <input 
               type="number" 

@@ -1,3 +1,5 @@
+import { CURRENCY } from '@/lib/constants';
+import { useToast } from '@/components/Toast';
 'use client';
 
 import { useState } from 'react';
@@ -16,6 +18,7 @@ export function SalaryForm({
   initialProviders: any[];
   accounts: any[];
 }) {
+  const toast = useToast();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   
@@ -23,7 +26,7 @@ export function SalaryForm({
   const [cashProviders, setCashProviders] = useState<any[]>(initialProviders);
 
   const [employeeId, setEmployeeId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [cashProviderId, setCashProviderId] = useState('');
@@ -39,7 +42,7 @@ export function SalaryForm({
       setEmployees(prev => [...prev, party]);
       setEmployeeId(party.id);
     } catch (err) {
-      alert('Failed to add employee');
+      toast.error('Failed to add employee');
     } finally {
       setSaving(false);
     }
@@ -53,7 +56,7 @@ export function SalaryForm({
       setCashProviders(prev => [...prev, party]);
       setCashProviderId(party.id);
     } catch (err) {
-      alert('Failed to add cash provider');
+      toast.error('Failed to add cash provider');
     } finally {
       setSaving(false);
     }
@@ -69,7 +72,7 @@ export function SalaryForm({
       if (period) {
         const [y, m] = period.split('-').map(Number);
         startDate = `${y}-${String(m).padStart(2, '0')}-01`;
-        endDate = new Date(y, m, 0).toISOString().split('T')[0];
+        endDate = new Date(y, m, 0).toLocaleDateString('en-CA');
       }
 
       await createSalaryRecord({
@@ -86,7 +89,7 @@ export function SalaryForm({
       router.push('/');
     } catch (err) {
       console.error(err);
-      alert('Failed to save salary record');
+      toast.error('Failed to save salary record');
     } finally {
       setSaving(false);
     }
@@ -145,7 +148,7 @@ export function SalaryForm({
 
           <div>
             <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-              Amount (₹)
+              Amount ({CURRENCY})
             </label>
             <input 
               type="number" 

@@ -26,7 +26,7 @@ export default function ExportPage() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `shambala-${exportType}-${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.download = `shambala-${exportType}-${new Date().toLocaleDateString('en-CA')}.xlsx`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (err) {

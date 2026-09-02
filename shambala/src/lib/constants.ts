@@ -18,3 +18,7 @@ export const PARTY_CLASS_LABELS: Record<string, string> = {
   shop: 'Shop',
   supplier: 'Supplier',
 };
+
+// Branding & Localization
+export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || 'Shambala';
+export const CURRENCY = '₹';

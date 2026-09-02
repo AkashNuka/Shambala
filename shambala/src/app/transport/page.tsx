@@ -34,7 +34,7 @@ export default async function TransportPage() {
         {records.map((r) => {
           const vehicle = r.vehicle as any;
           const delivery = r.delivery as any;
-          const date = delivery?.date || new Date().toISOString().split('T')[0];
+          const date = delivery?.date || new Date().toLocaleDateString('en-CA');
           const materialName = delivery?.material?.name || '';
 
           return (

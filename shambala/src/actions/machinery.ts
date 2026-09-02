@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { DEFAULT_PROJECT_ID } from '@/lib/constants';
 import type { MachineryRecord, FuelRecord } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
+import { postVoucher, getLedgerId } from './accounting';
 
 export async function createMachineryRecord(
   data: Partial<MachineryRecord> & { account_id?: string },
@@ -46,30 +47,67 @@ export async function createMachineryRecord(
     if (fuelError) console.error('Failed to save fuel record', fuelError);
 
     if (fuelData.amount && fuelData.amount > 0) {
-      await supabase.from('transactions').insert({
-        project_id: DEFAULT_PROJECT_ID,
-        type: 'operational_expense',
-        date: data.date,
-        amount: fuelData.amount,
-        party_id: fuelData.provider_id || null,
-        account_id: fuelData.account_id || data.account_id || null,
+      const fuelExpenseLedgerId = await getLedgerId('Machine Fuel Expense');
+      const supplierPayableLedgerId = await getLedgerId('Supplier Payable');
+      
+      await postVoucher({
+        voucher_no: `JV-FUEL-${Date.now()}`,
+        type: 'Journal',
+        date: data.date || new Date().toISOString().split('T')[0],
+        narration: `Fuel expense on ${data.date}`,
         reference_table: 'fuel_records',
-        description: `Fuel payment for ${data.date}`,
+        lines: [
+          { ledger_id: fuelExpenseLedgerId, debit: fuelData.amount, cost_center_id: data.building_id || null },
+          { ledger_id: supplierPayableLedgerId, credit: fuelData.amount, party_id: fuelData.provider_id || null }
+        ]
       });
+
+      const fuelAccountId = fuelData.account_id || data.account_id;
+      if (fuelAccountId) {
+        await postVoucher({
+          voucher_no: `PV-FUEL-${Date.now()}`,
+          type: 'Payment',
+          date: data.date || new Date().toISOString().split('T')[0],
+          narration: `Fuel payment on ${data.date}`,
+          reference_table: 'fuel_records',
+          lines: [
+            { ledger_id: supplierPayableLedgerId, debit: fuelData.amount, party_id: fuelData.provider_id || null },
+            { ledger_id: fuelAccountId, credit: fuelData.amount }
+          ]
+        });
+      }
     }
   }
 
   if (data.amount && data.amount > 0) {
-    await supabase.from('transactions').insert({
-      project_id: DEFAULT_PROJECT_ID,
-      type: 'operational_expense',
-      date: data.date,
-      amount: data.amount,
-      party_id: data.operator_id || null,
-      account_id: data.account_id || null,
+    const machineryExpenseLedgerId = await getLedgerId('Labour Expense'); // Assuming operator is labour
+    const payableLedgerId = await getLedgerId('Worker Payable');
+
+    await postVoucher({
+      voucher_no: `JV-MAC-${Date.now()}`,
+      type: 'Journal',
+      date: data.date || new Date().toISOString().split('T')[0],
+      narration: `Machinery expense for ${data.date}`,
       reference_table: 'machinery_records',
-      description: `Machinery payment for ${data.date}`,
+      lines: [
+        { ledger_id: machineryExpenseLedgerId, debit: data.amount, cost_center_id: data.building_id || null },
+        { ledger_id: payableLedgerId, credit: data.amount, party_id: data.operator_id || null }
+      ]
     });
+
+    if (data.account_id) {
+      await postVoucher({
+        voucher_no: `PV-MAC-${Date.now()}`,
+        type: 'Payment',
+        date: data.date || new Date().toISOString().split('T')[0],
+        narration: `Machinery payment for ${data.date}`,
+        reference_table: 'machinery_records',
+        lines: [
+          { ledger_id: payableLedgerId, debit: data.amount, party_id: data.operator_id || null },
+          { ledger_id: data.account_id, credit: data.amount }
+        ]
+      });
+    }
   }
 
   revalidatePath('/');
@@ -98,16 +136,34 @@ export async function createFuelRecord(data: Partial<FuelRecord> & { account_id?
   if (error) throw new Error('Failed to save fuel record');
 
   if (data.amount && data.amount > 0) {
-    await supabase.from('transactions').insert({
-      project_id: DEFAULT_PROJECT_ID,
-      type: 'operational_expense',
-      date: data.date,
-      amount: data.amount,
-      party_id: data.provider_id || null,
-      account_id: data.account_id || null,
+    const fuelExpenseLedgerId = await getLedgerId('Machine Fuel Expense');
+    const supplierPayableLedgerId = await getLedgerId('Supplier Payable');
+
+    await postVoucher({
+      voucher_no: `JV-FUEL-${Date.now()}`,
+      type: 'Journal',
+      date: data.date || new Date().toISOString().split('T')[0],
+      narration: `Fuel expense on ${data.date}`,
       reference_table: 'fuel_records',
-      description: `Fuel payment for ${data.date}`,
+      lines: [
+        { ledger_id: fuelExpenseLedgerId, debit: data.amount, cost_center_id: data.building_id || null },
+        { ledger_id: supplierPayableLedgerId, credit: data.amount, party_id: data.provider_id || null }
+      ]
     });
+
+    if (data.account_id) {
+      await postVoucher({
+        voucher_no: `PV-FUEL-${Date.now()}`,
+        type: 'Payment',
+        date: data.date || new Date().toISOString().split('T')[0],
+        narration: `Fuel payment on ${data.date}`,
+        reference_table: 'fuel_records',
+        lines: [
+          { ledger_id: supplierPayableLedgerId, debit: data.amount, party_id: data.provider_id || null },
+          { ledger_id: data.account_id, credit: data.amount }
+        ]
+      });
+    }
   }
 
   revalidatePath('/');

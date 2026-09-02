@@ -23,7 +23,6 @@ export default async function HomePage() {
       <div className="mb-6 animate-fade-in flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold">{getGreeting()}</h1>
-          <p className="text-text-secondary text-sm mt-0.5">Narth Villas</p>
         </div>
         <div className="flex flex-col items-end gap-2">
           <Link href="/reports" className="text-sm font-medium text-accent">
@@ -45,6 +44,13 @@ export default async function HomePage() {
       {/* ============================================================
           BALANCE CARDS
           ============================================================ */}
+      <div className="flex justify-between items-end mb-3 animate-fade-in stagger-1">
+        <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider">Balances</h2>
+        <div className="flex gap-2">
+          <Link href="/money/add" className="w-9 h-9 rounded-full bg-green/10 text-green flex items-center justify-center text-lg shadow-sm border border-green/20" title="Money In">+</Link>
+          <Link href="/money/transfer" className="w-9 h-9 rounded-full bg-accent/10 text-accent-light flex items-center justify-center text-lg shadow-sm border border-accent/20" title="Transfer">↔️</Link>
+        </div>
+      </div>
       <div className="grid grid-cols-2 gap-3 mb-4 animate-fade-in stagger-1">
         <div className="bg-bg-card border border-border rounded-2xl p-4">
           <p className="text-xs text-text-muted font-medium uppercase tracking-wider">Cash</p>
@@ -56,15 +62,9 @@ export default async function HomePage() {
         </div>
       </div>
 
-      <div className="bg-bg-card border border-border rounded-2xl p-4 mb-6 animate-fade-in stagger-2 flex justify-between items-center">
-        <div>
-          <p className="text-xs text-text-muted font-medium uppercase tracking-wider">{currentMonthLabel()}</p>
-          <p className="text-xl font-bold text-red-light mt-1">{formatCurrency(monthSpent)} <span className="text-sm font-normal text-text-muted">spent</span></p>
-        </div>
-        <div className="flex gap-2">
-          <Link href="/money/add" className="w-10 h-10 rounded-full bg-green/10 text-green flex items-center justify-center text-lg shadow-sm border border-green/20" title="Money In">+</Link>
-          <Link href="/money/transfer" className="w-10 h-10 rounded-full bg-accent/10 text-accent-light flex items-center justify-center text-lg shadow-sm border border-accent/20" title="Transfer">↔️</Link>
-        </div>
+      <div className="bg-bg-card border border-border rounded-2xl p-4 mb-6 animate-fade-in stagger-2">
+        <p className="text-xs text-text-muted font-medium uppercase tracking-wider">{currentMonthLabel()}</p>
+        <p className="text-xl font-bold text-red-light mt-1">{formatCurrency(monthSpent)} <span className="text-sm font-normal text-text-muted">spent</span></p>
       </div>
 
       {/* ============================================================

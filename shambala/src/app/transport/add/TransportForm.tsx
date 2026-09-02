@@ -1,3 +1,5 @@
+import { CURRENCY } from '@/lib/constants';
+import { useToast } from '@/components/Toast';
 'use client';
 
 import { useState } from 'react';
@@ -16,13 +18,14 @@ export function TransportForm({
   initialProviders: any[];
   accounts: any[];
 }) {
+  const toast = useToast();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   
   const [cashProviders, setCashProviders] = useState<any[]>(initialProviders);
 
   const [vehicleId, setVehicleId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [cashProviderId, setCashProviderId] = useState('');
@@ -40,7 +43,7 @@ export function TransportForm({
       setCashProviders(prev => [...prev, party]);
       setCashProviderId(party.id);
     } catch (err) {
-      alert('Failed to add cash provider');
+      toast.error('Failed to add cash provider');
     } finally {
       setSaving(false);
     }
@@ -64,7 +67,7 @@ export function TransportForm({
       router.push('/');
     } catch (err) {
       console.error(err);
-      alert('Failed to save transport record');
+      toast.error('Failed to save transport record');
     } finally {
       setSaving(false);
     }
@@ -136,7 +139,7 @@ export function TransportForm({
 
           <div>
             <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-              Transport Cost (₹)
+              Transport Cost ({CURRENCY})
             </label>
             <input 
               type="number" 

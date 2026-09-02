@@ -1,3 +1,5 @@
+import { CURRENCY } from '@/lib/constants';
+import { useToast } from '@/components/Toast';
 'use client';
 
 import { useState } from 'react';
@@ -17,12 +19,13 @@ export function FoodForm({
   initialProviders: any[];
   accounts: any[];
 }) {
+  const toast = useToast();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   
   const [categoryId, setCategoryId] = useState('');
   const [shopId, setShopId] = useState('');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [date, setDate] = useState(new Date().toLocaleDateString('en-CA'));
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('cash');
   const [cashProviderId, setCashProviderId] = useState('');
@@ -47,7 +50,7 @@ export function FoodForm({
       router.push('/');
     } catch (err) {
       console.error(err);
-      alert('Failed to save food record');
+      toast.error('Failed to save food record');
     } finally {
       setSaving(false);
     }
@@ -101,7 +104,7 @@ export function FoodForm({
 
           <div>
             <label className="block text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">
-              Amount (₹)
+              Amount ({CURRENCY})
             </label>
             <input 
               type="number" 

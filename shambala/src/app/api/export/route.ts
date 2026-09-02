@@ -1,3 +1,4 @@
+import { APP_NAME } from '@/lib/constants';
 import { NextRequest, NextResponse } from 'next/server';
 import * as XLSX from 'xlsx';
 import { createClient } from '@/lib/supabase/server';
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     }
     if (month && year) {
       const firstDay = `${year}-${month.padStart(2, '0')}-01`;
-      const lastDay = new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0];
+      const lastDay = new Date(parseInt(year), parseInt(month), 0).toLocaleDateString('en-CA');
       query = query.gte('date', firstDay).lte('date', lastDay);
     }
 
@@ -71,7 +72,7 @@ export async function GET(request: NextRequest) {
     return new NextResponse(buf, {
       headers: {
         'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'Content-Disposition': `attachment; filename="shambala-export-${new Date().toISOString().split('T')[0]}.xlsx"`,
+        'Content-Disposition': `attachment; filename="${APP_NAME.toLowerCase()}-export-${new Date().toLocaleDateString('en-CA')}.xlsx"`,
       },
     });
   } catch (err) {

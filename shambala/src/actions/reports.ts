@@ -14,7 +14,7 @@ export async function getMonthlyReport(year: number, month: number): Promise<{ m
   const supabase = await createClient();
 
   const firstDay = `${year}-${String(month).padStart(2, '0')}-01`;
-  const lastDay = new Date(year, month, 0).toISOString().split('T')[0];
+  const lastDay = new Date(year, month, 0).toLocaleDateString('en-CA');
 
   // Fetch all record types for the month in parallel
   const [labourRes, foodRes, machineryRes, salaryRes, materialRes, transportRes] = await Promise.all([
@@ -53,10 +53,10 @@ export async function getMonthlyReport(year: number, month: number): Promise<{ m
       .lte('date', lastDay)
       .not('material_cost', 'is', null),
     supabase
-      .from('transport_records')
-      .select('amount, delivery:material_deliveries!inner(project_id, date)')
-      .not('amount', 'is', null),
-    // Note: transport_records link through material_deliveries for project/date context.
+      .from('transport_trips')
+      .select('*, vehicle:transport_vehicles(vehicle_number), delivery:material_deliveries(project_id, date)')
+      .eq('status', 'completed'),
+    // Note: transport_trips link through material_deliveries for project/date context.
     // We filter after fetch since Supabase nested filters have limitations.
   ]);
 
@@ -84,4 +84,79 @@ export async function getMonthlyReport(year: number, month: number): Promise<{ m
   const grandTotal = modules.reduce((s, m) => s + m.total, 0);
 
   return { modules, grandTotal };
+}
+
+export async function getDayBook(date: string) {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*, party:parties(name), account:accounts(name)')
+    .eq('project_id', DEFAULT_PROJECT_ID)
+    .eq('date', date)
+    .order('created_at', { ascending: true });
+
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+export async function getBuildingReport(year: number, month: number) {
+  const supabase = await createClient();
+
+  const firstDay = `${year}-${String(month).padStart(2, '0')}-01`;
+  const lastDay = new Date(year, month, 0).toLocaleDateString('en-CA');
+
+  const [buildingsRes, labourRes, materialRes, machineryRes] = await Promise.all([
+    supabase.from('buildings').select('id, display_name').eq('project_id', DEFAULT_PROJECT_ID),
+    supabase
+      .from('labour_records')
+      .select('building_id, amount')
+      .eq('project_id', DEFAULT_PROJECT_ID)
+      .gte('date', firstDay)
+      .lte('date', lastDay)
+      .not('amount', 'is', null)
+      .not('building_id', 'is', null),
+    supabase
+      .from('material_deliveries')
+      .select('building_id, material_cost')
+      .eq('project_id', DEFAULT_PROJECT_ID)
+      .gte('date', firstDay)
+      .lte('date', lastDay)
+      .not('material_cost', 'is', null)
+      .not('building_id', 'is', null),
+    supabase
+      .from('machinery_records')
+      .select('building_id, amount')
+      .eq('project_id', DEFAULT_PROJECT_ID)
+      .gte('date', firstDay)
+      .lte('date', lastDay)
+      .not('amount', 'is', null)
+      .not('building_id', 'is', null)
+  ]);
+
+  const buildings = buildingsRes.data || [];
+  const labour = labourRes.data || [];
+  const materials = materialRes.data || [];
+  const machinery = machineryRes.data || [];
+
+  const buildingCosts = buildings.map((b: any) => {
+    const lCost = labour.filter((r: any) => r.building_id === b.id).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0);
+    const mCost = materials.filter((r: any) => r.building_id === b.id).reduce((s: number, r: any) => s + (Number(r.material_cost) || 0), 0);
+    const machCost = machinery.filter((r: any) => r.building_id === b.id).reduce((s: number, r: any) => s + (Number(r.amount) || 0), 0);
+
+    return {
+      id: b.id,
+      name: b.display_name,
+      total: lCost + mCost + machCost,
+      breakdown: {
+        labour: lCost,
+        materials: mCost,
+        machinery: machCost
+      }
+    };
+  }).filter((b: any) => b.total > 0);
+
+  buildingCosts.sort((a: any, b: any) => b.total - a.total);
+
+  return buildingCosts;
 }

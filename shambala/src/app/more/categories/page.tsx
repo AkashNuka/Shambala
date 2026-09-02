@@ -1,3 +1,4 @@
+import { useToast } from '@/components/Toast';
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -10,6 +11,7 @@ import { DEFAULT_PROJECT_ID } from '@/lib/constants';
 type Tab = 'food' | 'work' | 'worker';
 
 export default function CategoriesPage() {
+  const toast = useToast();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>('food');
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,7 @@ export default function CategoriesPage() {
       setNewName('');
       setIsModalOpen(false);
     } catch (err) {
-      alert('Failed to add item');
+      toast.error('Failed to add item');
     } finally {
       setSaving(false);
     }

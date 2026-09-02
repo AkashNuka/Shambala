@@ -1,3 +1,4 @@
+import { APP_NAME } from '@/lib/constants';
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
@@ -46,7 +47,7 @@ export async function GET() {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Content-Disposition': `attachment; filename="shambala-backup-${new Date().toISOString().split('T')[0]}.json"`,
+        'Content-Disposition': `attachment; filename="${APP_NAME.toLowerCase()}-backup-${new Date().toLocaleDateString('en-CA')}.json"`,
       },
     });
   } catch (error) {

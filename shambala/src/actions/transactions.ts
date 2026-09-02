@@ -219,19 +219,19 @@ export async function deleteRecord(tableName: string, id: string) {
 
   // For material_deliveries, cascade-delete linked transport and weighbridge records first
   if (tableName === 'material_deliveries') {
-    // Clean up transport_records and their transactions
+    // Clean up transport_trips and their transactions
     const { data: transportRecords } = await supabase
-      .from('transport_records')
+      .from('transport_trips')
       .select('id')
       .eq('delivery_id', id);
 
     if (transportRecords && transportRecords.length > 0) {
       for (const tr of transportRecords) {
         await supabase.from('transactions').delete()
-          .eq('reference_table', 'transport_records')
+          .eq('reference_table', 'transport_trips')
           .eq('reference_id', tr.id);
       }
-      await supabase.from('transport_records').delete().eq('delivery_id', id);
+      await supabase.from('transport_trips').delete().eq('delivery_id', id);
     }
 
     // Clean up weighbridge_records and their transactions

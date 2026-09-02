@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { DEFAULT_PROJECT_ID } from '@/lib/constants';
 import { revalidatePath } from 'next/cache';
+import { postVoucher, getLedgerId } from './accounting';
 
 export async function addMoneyIn(data: {
   amount: number;
@@ -12,20 +13,29 @@ export async function addMoneyIn(data: {
   payment_method?: string;
   description?: string;
 }) {
-  const supabase = await createClient();
+  try {
+    // A Money In transaction debits Cash/Bank and credits Owner Capital (or Loan)
+    const ownerCapitalLedgerId = await getLedgerId('Owner Capital');
 
-  const { error } = await supabase.from('transactions').insert({
-    project_id: DEFAULT_PROJECT_ID,
-    type: 'money_in',
-    amount: data.amount,
-    account_id: data.account_id,
-    party_id: data.party_id || null,
-    date: data.date,
-    payment_method: data.payment_method || 'cash',
-    description: data.description || 'Cash received',
-  });
-
-  if (error) {
+    await postVoucher({
+      voucher_no: `MI-${Date.now()}`,
+      type: 'Receipt',
+      date: data.date,
+      narration: data.description || 'Cash received',
+      lines: [
+        {
+          ledger_id: data.account_id, // This is the ID of the cash/bank account
+          debit: data.amount,
+          party_id: data.party_id || null,
+        },
+        {
+          ledger_id: ownerCapitalLedgerId,
+          credit: data.amount,
+          party_id: data.party_id || null,
+        }
+      ]
+    });
+  } catch (error: any) {
     console.error('Failed to record money in:', error);
     throw new Error('Failed to record money in');
   }
@@ -41,20 +51,24 @@ export async function createTransfer(data: {
   date: string;
   description?: string;
 }) {
-  const supabase = await createClient();
-
-  const { error } = await supabase.from('transactions').insert({
-    project_id: DEFAULT_PROJECT_ID,
-    type: 'transfer',
-    amount: data.amount,
-    account_id: data.from_account_id,
-    to_account_id: data.to_account_id,
-    date: data.date,
-    payment_method: 'bank_transfer',
-    description: data.description || 'Transfer between accounts',
-  });
-
-  if (error) {
+  try {
+    await postVoucher({
+      voucher_no: `TR-${Date.now()}`,
+      type: 'Contra', // Transfers are Contra vouchers
+      date: data.date,
+      narration: data.description || 'Transfer between accounts',
+      lines: [
+        {
+          ledger_id: data.to_account_id,
+          debit: data.amount,
+        },
+        {
+          ledger_id: data.from_account_id,
+          credit: data.amount,
+        }
+      ]
+    });
+  } catch (error: any) {
     console.error('Failed to create transfer:', error);
     throw new Error('Failed to create transfer');
   }
