@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { DEFAULT_PROJECT_ID, DEFAULT_CASH_ACCOUNT_ID } from '@/lib/constants';
 
-export async function createStandaloneTransportRecord(data: any) {
+export async function createStandaloneTransportRecord(data: any & { account_id?: string }) {
   const supabase = await createClient();
 
   const { data: record, error } = await supabase
@@ -24,7 +24,7 @@ export async function createStandaloneTransportRecord(data: any) {
   if (data.amount && data.payment_method && data.payment_method !== 'credit') {
     const { error: txnError } = await supabase.from('transactions').insert({
       project_id: DEFAULT_PROJECT_ID,
-      account_id: DEFAULT_CASH_ACCOUNT_ID, // Use actual account based on payment_method in real app
+      account_id: data.account_id || null,
       amount: data.amount,
       type: 'operational_expense',
       reference_table: 'transport_records',

@@ -217,7 +217,40 @@ export async function deleteRecord(tableName: string, id: string) {
     return;
   }
 
-  // Otherwise, delete the operational record
+  // For material_deliveries, cascade-delete linked transport and weighbridge records first
+  if (tableName === 'material_deliveries') {
+    // Clean up transport_records and their transactions
+    const { data: transportRecords } = await supabase
+      .from('transport_records')
+      .select('id')
+      .eq('delivery_id', id);
+
+    if (transportRecords && transportRecords.length > 0) {
+      for (const tr of transportRecords) {
+        await supabase.from('transactions').delete()
+          .eq('reference_table', 'transport_records')
+          .eq('reference_id', tr.id);
+      }
+      await supabase.from('transport_records').delete().eq('delivery_id', id);
+    }
+
+    // Clean up weighbridge_records and their transactions
+    const { data: weighbridgeRecords } = await supabase
+      .from('weighbridge_records')
+      .select('id')
+      .eq('delivery_id', id);
+
+    if (weighbridgeRecords && weighbridgeRecords.length > 0) {
+      for (const wb of weighbridgeRecords) {
+        await supabase.from('transactions').delete()
+          .eq('reference_table', 'weighbridge_records')
+          .eq('reference_id', wb.id);
+      }
+      await supabase.from('weighbridge_records').delete().eq('delivery_id', id);
+    }
+  }
+
+  // Delete the operational record
   const { error } = await supabase.from(tableName).delete().eq('id', id);
   if (error) throw new Error(`Failed to delete from ${tableName}`);
 

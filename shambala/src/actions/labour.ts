@@ -5,10 +5,10 @@ import { DEFAULT_PROJECT_ID } from '@/lib/constants';
 import type { LabourRecord } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-export async function createLabourRecord(data: Partial<LabourRecord>) {
+export async function createLabourRecord(data: Partial<LabourRecord> & { account_id?: string }) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('labour_records').insert({
+  const { data: record, error } = await supabase.from('labour_records').insert({
     project_id: DEFAULT_PROJECT_ID,
     worker_id: data.worker_id,
     worker_type_id: data.worker_type_id,
@@ -20,7 +20,7 @@ export async function createLabourRecord(data: Partial<LabourRecord>) {
     cash_provider_id: data.cash_provider_id || null,
     payment_method: data.payment_method || 'cash',
     comments: data.comments || null,
-  });
+  }).select('id').single();
 
   if (error) {
     console.error('Failed to create labour record:', error);
@@ -35,8 +35,10 @@ export async function createLabourRecord(data: Partial<LabourRecord>) {
       date: data.date,
       amount: data.amount,
       party_id: data.worker_id,
+      account_id: data.account_id || null,
       payment_method: data.payment_method || 'cash',
       reference_table: 'labour_records',
+      reference_id: record.id,
       description: `Labour payment for ${data.date}`,
     });
   }

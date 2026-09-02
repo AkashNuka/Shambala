@@ -67,7 +67,8 @@ export async function getMachinery() {
   const { data, error } = await supabase
     .from('machinery')
     .select('*')
-    .eq('project_id', DEFAULT_PROJECT_ID);
+    .eq('project_id', DEFAULT_PROJECT_ID)
+    .eq('is_active', true);
   
   if (error) throw new Error('Failed to load machinery');
   return data;

@@ -5,7 +5,10 @@ import { DEFAULT_PROJECT_ID } from '@/lib/constants';
 import type { MachineryRecord, FuelRecord } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-export async function createMachineryRecord(data: Partial<MachineryRecord>, fuelData?: Partial<FuelRecord>) {
+export async function createMachineryRecord(
+  data: Partial<MachineryRecord> & { account_id?: string },
+  fuelData?: Partial<FuelRecord> & { account_id?: string }
+) {
   const supabase = await createClient();
 
   const { error } = await supabase.from('machinery_records').insert({
@@ -41,13 +44,39 @@ export async function createMachineryRecord(data: Partial<MachineryRecord>, fuel
       comments: fuelData.comments || null,
     });
     if (fuelError) console.error('Failed to save fuel record', fuelError);
+
+    if (fuelData.amount && fuelData.amount > 0) {
+      await supabase.from('transactions').insert({
+        project_id: DEFAULT_PROJECT_ID,
+        type: 'operational_expense',
+        date: data.date,
+        amount: fuelData.amount,
+        party_id: fuelData.provider_id || null,
+        account_id: fuelData.account_id || data.account_id || null,
+        reference_table: 'fuel_records',
+        description: `Fuel payment for ${data.date}`,
+      });
+    }
+  }
+
+  if (data.amount && data.amount > 0) {
+    await supabase.from('transactions').insert({
+      project_id: DEFAULT_PROJECT_ID,
+      type: 'operational_expense',
+      date: data.date,
+      amount: data.amount,
+      party_id: data.operator_id || null,
+      account_id: data.account_id || null,
+      reference_table: 'machinery_records',
+      description: `Machinery payment for ${data.date}`,
+    });
   }
 
   revalidatePath('/');
   revalidatePath('/machinery');
 }
 
-export async function createFuelRecord(data: Partial<FuelRecord>) {
+export async function createFuelRecord(data: Partial<FuelRecord> & { account_id?: string }) {
   const supabase = await createClient();
 
   const { error } = await supabase.from('fuel_records').insert({
@@ -67,6 +96,19 @@ export async function createFuelRecord(data: Partial<FuelRecord>) {
   });
 
   if (error) throw new Error('Failed to save fuel record');
+
+  if (data.amount && data.amount > 0) {
+    await supabase.from('transactions').insert({
+      project_id: DEFAULT_PROJECT_ID,
+      type: 'operational_expense',
+      date: data.date,
+      amount: data.amount,
+      party_id: data.provider_id || null,
+      account_id: data.account_id || null,
+      reference_table: 'fuel_records',
+      description: `Fuel payment for ${data.date}`,
+    });
+  }
 
   revalidatePath('/');
   revalidatePath('/machinery');
@@ -89,16 +131,5 @@ export async function getMachineryRecords(limit = 50) {
     .limit(limit);
 
   if (error) throw new Error('Failed to load machinery records');
-  return data;
-}
-
-export async function getMachinery() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('machinery')
-    .select('*')
-    .eq('project_id', DEFAULT_PROJECT_ID)
-    .eq('is_active', true);
-  if (error) throw new Error('Failed to fetch machinery');
   return data;
 }

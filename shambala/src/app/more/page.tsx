@@ -19,7 +19,7 @@ const MENU_ITEMS = [
   {
     section: 'About',
     items: [
-      { href: '#', icon: '🏗️', label: 'Shambala v1.0', desc: 'Construction Site Expense Manager' },
+      { href: '', icon: '🏗️', label: 'Shambala v1.0', desc: 'Construction Site Expense Manager' },
     ],
   },
 ];
@@ -35,24 +35,45 @@ export default function MorePage() {
             {section.section}
           </h2>
           <div className="space-y-2">
-            {section.items.map(item => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-4 bg-bg-card border border-border rounded-2xl p-4 hover:bg-bg-elevated transition-all active:scale-[0.98]"
-              >
-                <span className="text-xl w-10 h-10 flex items-center justify-center bg-bg-elevated rounded-xl">
-                  {item.icon}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold">{item.label}</h3>
-                  <p className="text-xs text-text-muted mt-0.5">{item.desc}</p>
-                </div>
-                <svg className="w-4 h-4 text-text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </Link>
-            ))}
+            {section.items.map(item => {
+              const content = (
+                <>
+                  <span className="text-xl w-10 h-10 flex items-center justify-center bg-bg-elevated rounded-xl">
+                    {item.icon}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-sm font-semibold">{item.label}</h3>
+                    <p className="text-xs text-text-muted mt-0.5">{item.desc}</p>
+                  </div>
+                  {item.href && (
+                    <svg className="w-4 h-4 text-text-muted shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path d="M9 5l7 7-7 7" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </>
+              );
+
+              if (!item.href) {
+                return (
+                  <div
+                    key={item.label}
+                    className="flex items-center gap-4 bg-bg-card border border-border rounded-2xl p-4"
+                  >
+                    {content}
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-4 bg-bg-card border border-border rounded-2xl p-4 hover:bg-bg-elevated transition-all active:scale-[0.98]"
+                >
+                  {content}
+                </Link>
+              );
+            })}
           </div>
         </div>
       ))}

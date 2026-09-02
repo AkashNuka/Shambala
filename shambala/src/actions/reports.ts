@@ -54,15 +54,23 @@ export async function getMonthlyReport(year: number, month: number): Promise<{ m
       .not('material_cost', 'is', null),
     supabase
       .from('transport_records')
-      .select('amount')
+      .select('amount, delivery:material_deliveries!inner(project_id, date)')
       .not('amount', 'is', null),
-    // Note: transport_records don't have project_id directly, they link through deliveries.
-    // For a simple report we sum all transport amounts. In a full implementation,
-    // we'd join through material_deliveries.
+    // Note: transport_records link through material_deliveries for project/date context.
+    // We filter after fetch since Supabase nested filters have limitations.
   ]);
 
   const sum = (rows: any[] | null, field = 'amount') =>
     (rows || []).reduce((s: number, r: any) => s + (Number(r[field]) || 0), 0);
+
+  // Filter transport records by project and date range via joined delivery
+  const filteredTransport = (transportRes.data || []).filter((r: any) => {
+    const delivery = r.delivery as any;
+    if (!delivery) return false;
+    return delivery.project_id === DEFAULT_PROJECT_ID &&
+           delivery.date >= firstDay &&
+           delivery.date <= lastDay;
+  });
 
   const modules: ModuleSpend[] = [
     { module: 'labour', label: 'Labour', icon: '👷', total: sum(labourRes.data) },
@@ -70,7 +78,7 @@ export async function getMonthlyReport(year: number, month: number): Promise<{ m
     { module: 'machinery', label: 'Machinery', icon: '🚜', total: sum(machineryRes.data) },
     { module: 'salary', label: 'Salary', icon: '💰', total: sum(salaryRes.data) },
     { module: 'materials', label: 'Materials', icon: '🧱', total: sum(materialRes.data, 'material_cost') },
-    { module: 'transport', label: 'Transport', icon: '🚚', total: sum(transportRes.data) },
+    { module: 'transport', label: 'Transport', icon: '🚚', total: sum(filteredTransport) },
   ];
 
   const grandTotal = modules.reduce((s, m) => s + m.total, 0);

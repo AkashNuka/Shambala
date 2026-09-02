@@ -7,8 +7,9 @@ import { revalidatePath } from 'next/cache';
 
 export async function createMaterialDelivery(
   delivery: Partial<MaterialDelivery>,
-  transport?: Partial<TransportRecord>,
-  weighbridge?: Partial<WeighbridgeRecord>
+  transport?: Partial<TransportRecord> & { account_id?: string },
+  weighbridge?: Partial<WeighbridgeRecord> & { account_id?: string },
+  account_id?: string
 ) {
   const supabase = await createClient();
 
@@ -57,6 +58,47 @@ export async function createMaterialDelivery(
       gross_weight: weighbridge.gross_weight || null,
       tare_weight: weighbridge.tare_weight || null,
       fee: weighbridge.fee || null,
+    });
+  }
+
+  // Transactions
+  if (delivery.material_cost && delivery.material_cost > 0) {
+    await supabase.from('transactions').insert({
+      project_id: DEFAULT_PROJECT_ID,
+      type: 'supplier_payment',
+      date: delivery.date,
+      amount: delivery.material_cost,
+      party_id: delivery.supplier_id || null,
+      account_id: account_id || null,
+      reference_table: 'material_deliveries',
+      reference_id: deliveryId,
+      description: `Material payment on ${delivery.date}`,
+    });
+  }
+
+  if (transport && transport.amount && transport.amount > 0) {
+    await supabase.from('transactions').insert({
+      project_id: DEFAULT_PROJECT_ID,
+      type: 'operational_expense',
+      date: delivery.date,
+      amount: transport.amount,
+      account_id: transport.account_id || account_id || null,
+      reference_table: 'transport_records',
+      reference_id: deliveryId,
+      description: `Transport payment for material on ${delivery.date}`,
+    });
+  }
+
+  if (weighbridge && weighbridge.fee && weighbridge.fee > 0) {
+    await supabase.from('transactions').insert({
+      project_id: DEFAULT_PROJECT_ID,
+      type: 'operational_expense',
+      date: delivery.date,
+      amount: weighbridge.fee,
+      account_id: weighbridge.account_id || account_id || null,
+      reference_table: 'weighbridge_records',
+      reference_id: deliveryId,
+      description: `Weighbridge fee for material on ${delivery.date}`,
     });
   }
 

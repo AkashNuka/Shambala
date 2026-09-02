@@ -5,10 +5,10 @@ import { DEFAULT_PROJECT_ID } from '@/lib/constants';
 import type { FoodRecord } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-export async function createFoodRecord(data: Partial<FoodRecord>) {
+export async function createFoodRecord(data: Partial<FoodRecord> & { account_id?: string }) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('food_records').insert({
+  const { data: record, error } = await supabase.from('food_records').insert({
     project_id: DEFAULT_PROJECT_ID,
     worker_id: data.worker_id || null,
     worker_type_id: data.worker_type_id || null,
@@ -20,12 +20,24 @@ export async function createFoodRecord(data: Partial<FoodRecord>) {
     amount: data.amount || null,
     shop_id: data.shop_id || null,
     comments: data.comments || null,
-  });
+  }).select('id').single();
 
   if (error) throw new Error('Failed to save food record');
 
   // If there is an amount, we optionally create a transaction if it was paid immediately.
-  // For now, keeping it simple as per ERP requirements.
+  if (data.amount && data.amount > 0) {
+    await supabase.from('transactions').insert({
+      project_id: DEFAULT_PROJECT_ID,
+      type: 'operational_expense',
+      date: data.start_date,
+      amount: data.amount,
+      party_id: data.shop_id || null,
+      account_id: data.account_id || null,
+      reference_table: 'food_records',
+      reference_id: record.id,
+      description: `Food payment for ${data.start_date}`,
+    });
+  }
 
   revalidatePath('/');
   revalidatePath('/food');
@@ -49,15 +61,5 @@ export async function getFoodRecords(limit = 50) {
     .limit(limit);
 
   if (error) throw new Error('Failed to load food records');
-  return data;
-}
-
-export async function getFoodCategories() {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('food_categories')
-    .select('*')
-    .eq('project_id', DEFAULT_PROJECT_ID);
-  if (error) throw new Error('Failed to fetch food categories');
   return data;
 }

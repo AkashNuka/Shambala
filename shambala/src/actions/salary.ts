@@ -5,10 +5,10 @@ import { DEFAULT_PROJECT_ID } from '@/lib/constants';
 import type { SalaryRecord } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
 
-export async function createSalaryRecord(data: Partial<SalaryRecord>) {
+export async function createSalaryRecord(data: Partial<SalaryRecord> & { account_id?: string }) {
   const supabase = await createClient();
 
-  const { error } = await supabase.from('salary_records').insert({
+  const { data: record, error } = await supabase.from('salary_records').insert({
     project_id: DEFAULT_PROJECT_ID,
     employee_id: data.employee_id,
     worker_type_id: data.worker_type_id || null,
@@ -19,9 +19,28 @@ export async function createSalaryRecord(data: Partial<SalaryRecord>) {
     payment_method: data.payment_method || 'cash',
     cash_provider_id: data.cash_provider_id || null,
     comments: data.comments || null,
-  });
+  }).select('id').single();
 
-  if (error) throw new Error('Failed to save salary record');
+  if (error) {
+    console.error('Failed to create salary record:', error);
+    throw new Error('Failed to save salary record');
+  }
+
+  // Generate transaction if there is an amount paid
+  if (data.amount && data.amount > 0) {
+    await supabase.from('transactions').insert({
+      project_id: DEFAULT_PROJECT_ID,
+      type: 'operational_expense',
+      date: data.payment_date || data.start_date,
+      amount: data.amount,
+      party_id: data.employee_id,
+      account_id: data.account_id || null,
+      payment_method: data.payment_method || 'cash',
+      reference_table: 'salary_records',
+      reference_id: record.id,
+      description: `Salary payment for ${data.start_date}`,
+    });
+  }
 
   revalidatePath('/');
   revalidatePath('/salary');
