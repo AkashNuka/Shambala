@@ -3,13 +3,12 @@ import { getAccountBalances } from '@/actions/accounts';
 import { getRecentTransactions } from '@/actions/money';
 import { formatCurrency, formatDateShort } from '@/lib/utils';
 
-const TXN_TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
-  money_in: { label: 'Money In', icon: '💵', color: 'text-green' },
-  transfer: { label: 'Transfer', icon: '↔️', color: 'text-accent-light' },
-  operational_expense: { label: 'Expense', icon: '📤', color: 'text-red-light' },
-  general_expense: { label: 'Expense', icon: '📤', color: 'text-red-light' },
-  supplier_payment: { label: 'Supplier', icon: '🏪', color: 'text-red-light' },
-  opening_balance: { label: 'Opening', icon: '📊', color: 'text-accent-light' },
+const VOUCHER_TYPE_LABELS: Record<string, { label: string; icon: string; color: string }> = {
+  Receipt: { label: 'Money In', icon: '💵', color: 'text-green' },
+  Payment: { label: 'Payment', icon: '📤', color: 'text-red-light' },
+  Contra: { label: 'Transfer', icon: '↔️', color: 'text-accent-light' },
+  Journal: { label: 'Journal', icon: '📝', color: 'text-text-muted' },
+  Purchase: { label: 'Purchase', icon: '🏪', color: 'text-red-light' },
 };
 
 const ACCOUNT_TYPE_BADGES: Record<string, { bg: string; text: string }> = {
@@ -89,25 +88,38 @@ export default async function MoneyPage() {
           </div>
         ) : (
           <div className="space-y-2">
-            {recentTxns.map((txn: any) => {
-              const meta = TXN_TYPE_LABELS[txn.type] || TXN_TYPE_LABELS.opening_balance;
-              const partyName = txn.party?.name || '';
-              const isIncome = txn.type === 'money_in' || txn.type === 'opening_balance';
+            {recentTxns.map((voucher: any) => {
+              const meta = VOUCHER_TYPE_LABELS[voucher.type] || VOUCHER_TYPE_LABELS.Journal;
+              
+              // Find primary amount (usually max debit or max credit)
+              let amount = 0;
+              let isIncome = voucher.type === 'Receipt';
+              
+              if (voucher.lines && voucher.lines.length > 0) {
+                 amount = Math.max(...voucher.lines.map((l: any) => l.debit || l.credit || 0));
+              }
+
+              // Try to find a party name
+              let partyName = '';
+              if (voucher.lines) {
+                const lineWithParty = voucher.lines.find((l: any) => l.party?.name);
+                if (lineWithParty) partyName = lineWithParty.party.name;
+              }
 
               return (
-                <div key={txn.id} className="bg-bg-card border border-border rounded-2xl p-4 flex items-center gap-3">
+                <div key={voucher.id} className="bg-bg-card border border-border rounded-2xl p-4 flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-bg-elevated flex items-center justify-center text-base shrink-0">
                     {meta.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-semibold">{meta.label}</h3>
-                    <p className="text-xs text-text-muted truncate">{txn.description || partyName}</p>
+                    <h3 className="text-sm font-semibold">{meta.label} <span className="text-[10px] text-text-muted font-normal ml-1">({voucher.voucher_no})</span></h3>
+                    <p className="text-xs text-text-muted truncate">{voucher.narration || partyName}</p>
                   </div>
                   <div className="text-right shrink-0">
                     <p className={`text-sm font-bold ${meta.color}`}>
-                      {isIncome ? '+' : '-'}{formatCurrency(txn.amount)}
+                      {isIncome ? '+' : voucher.type === 'Journal' || voucher.type === 'Contra' ? '' : '-'}{formatCurrency(amount)}
                     </p>
-                    <p className="text-[10px] text-text-muted">{formatDateShort(txn.date)}</p>
+                    <p className="text-[10px] text-text-muted">{formatDateShort(voucher.date)}</p>
                   </div>
                 </div>
               );

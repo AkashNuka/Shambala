@@ -81,9 +81,21 @@ export async function getRecentTransactions(limit = 20) {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('transactions')
-    .select('*, party:parties(name)')
-    .eq('project_id', DEFAULT_PROJECT_ID)
+    .from('vouchers')
+    .select(`
+      id,
+      voucher_no,
+      type,
+      date,
+      narration,
+      created_at,
+      lines:voucher_lines(
+        debit,
+        credit,
+        ledger:ledger_accounts(name, account_group),
+        party:parties(name)
+      )
+    `)
     .order('date', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(limit);

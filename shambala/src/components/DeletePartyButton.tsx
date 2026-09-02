@@ -1,5 +1,7 @@
-import { useToast } from '@/components/Toast';
 'use client';
+
+import { useToast } from '@/components/Toast';
+
 
 import { useRouter } from 'next/navigation';
 import { deleteParty } from '@/actions/parties';
