@@ -11,12 +11,12 @@ export async function createSalaryRecord(data: Partial<SalaryRecord> & { account
 
   const { data: record, error } = await supabase.from('salary_records').insert({
     project_id: DEFAULT_PROJECT_ID,
-    employee_id: data.employee_id,
+    employee_id: data.employee_id!,
     worker_type_id: data.worker_type_id || null,
-    start_date: data.start_date,
-    end_date: data.end_date,
-    amount: data.amount,
-    payment_date: data.payment_date,
+    start_date: data.start_date!,
+    end_date: data.end_date!,
+    amount: data.amount!,
+    payment_date: data.payment_date!,
     payment_method: data.payment_method || 'cash',
     cash_provider_id: data.cash_provider_id || null,
     comments: data.comments || null,

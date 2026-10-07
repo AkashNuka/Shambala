@@ -19,11 +19,11 @@ export async function createMaterialDelivery(
     .from('material_deliveries')
     .insert({
       project_id: DEFAULT_PROJECT_ID,
-      material_id: delivery.material_id,
+      material_id: delivery.material_id!,
       variant_id: delivery.variant_id || null,
       supplier_id: delivery.supplier_id || null,
       building_id: delivery.building_id || null,
-      date: delivery.date,
+      date: delivery.date!,
       time: delivery.time || null,
       quantity: delivery.quantity || null,
       unit: delivery.unit || null,
@@ -42,7 +42,8 @@ export async function createMaterialDelivery(
 
   // Insert transport if provided
   if (transport && (transport.transport_type || transport.amount)) {
-    await supabase.from('transport_trips').insert({
+    // BUG: table does not exist — see fix 14
+    await (supabase as any).from('transport_trips').insert({
       project_id: DEFAULT_PROJECT_ID,
       delivery_id: deliveryId,
       vehicle_id: transport.vehicle_id || null,

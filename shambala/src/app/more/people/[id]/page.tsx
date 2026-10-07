@@ -135,17 +135,15 @@ export default function PartyLedgerPage() {
           <p className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Received</p>
           <p className="text-base font-bold text-green mt-1">{formatCurrency(totalCredit)}</p>
         </div>
-        <div className={`border rounded-2xl p-3 text-center ${
-          closingBalance > 0 
-            ? 'bg-red-light/5 border-red-light/20' 
-            : closingBalance < 0 
+        <div className={`border rounded-2xl p-3 text-center ${closingBalance > 0
+            ? 'bg-red-light/5 border-red-light/20'
+            : closingBalance < 0
               ? 'bg-green/5 border-green/20'
               : 'bg-bg-card border-border'
-        }`}>
-          <p className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Balance</p>
-          <p className={`text-base font-bold mt-1 ${
-            closingBalance > 0 ? 'text-red-light' : closingBalance < 0 ? 'text-green' : 'text-text-primary'
           }`}>
+          <p className="text-[10px] text-text-muted font-semibold uppercase tracking-wider">Balance</p>
+          <p className={`text-base font-bold mt-1 ${closingBalance > 0 ? 'text-red-light' : closingBalance < 0 ? 'text-green' : 'text-text-primary'
+            }`}>
             {closingBalance > 0 ? '' : closingBalance < 0 ? '' : ''}{formatCurrency(Math.abs(closingBalance))}
           </p>
           <p className="text-[9px] text-text-muted mt-0.5">
@@ -236,9 +234,8 @@ export default function PartyLedgerPage() {
                 <span className={`w-20 text-right font-semibold tabular-nums ${row.credit > 0 ? 'text-green' : 'text-transparent'}`}>
                   {row.credit > 0 ? formatCurrency(row.credit) : '—'}
                 </span>
-                <span className={`w-20 text-right font-bold tabular-nums ${
-                  row.balance > 0 ? 'text-red-light' : row.balance < 0 ? 'text-green' : 'text-text-muted'
-                }`}>
+                <span className={`w-20 text-right font-bold tabular-nums ${row.balance > 0 ? 'text-red-light' : row.balance < 0 ? 'text-green' : 'text-text-muted'
+                  }`}>
                   {formatCurrency(Math.abs(row.balance))}
                 </span>
               </div>
@@ -249,9 +246,8 @@ export default function PartyLedgerPage() {
               <span className="text-text-primary uppercase tracking-wider text-[10px]">Total</span>
               <span className="w-20 text-right text-red-light tabular-nums">{formatCurrency(totalDebit)}</span>
               <span className="w-20 text-right text-green tabular-nums">{formatCurrency(totalCredit)}</span>
-              <span className={`w-20 text-right tabular-nums ${
-                closingBalance > 0 ? 'text-red-light' : closingBalance < 0 ? 'text-green' : 'text-text-primary'
-              }`}>
+              <span className={`w-20 text-right tabular-nums ${closingBalance > 0 ? 'text-red-light' : closingBalance < 0 ? 'text-green' : 'text-text-primary'
+                }`}>
                 {formatCurrency(Math.abs(closingBalance))}
               </span>
             </div>

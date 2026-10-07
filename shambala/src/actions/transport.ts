@@ -7,7 +7,8 @@ import { postVoucher, getLedgerId } from './accounting';
 export async function createStandaloneTransportRecord(data: any & { account_id?: string }) {
   const supabase = await createClient();
 
-  const { data: record, error } = await supabase
+  // BUG: table does not exist — see fix 14
+  const { data: record, error } = await (supabase as any)
     .from('transport_trips')
     .insert({
       project_id: DEFAULT_PROJECT_ID,

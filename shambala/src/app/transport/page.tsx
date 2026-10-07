@@ -7,13 +7,16 @@ import { DEFAULT_PROJECT_ID } from '@/lib/constants';
 async function getTransportRecords(limit = 50) {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from('transport_records')
+  // BUG: table does not exist — see fix 14
+  const { data, error } = await (supabase as any)
+    .from('transport_trips')
     .select(`
       *,
       vehicle:transport_vehicles(vehicle_number, vehicle_type),
       delivery:material_deliveries(date, material:materials(name))
     `)
+    .eq('project_id', DEFAULT_PROJECT_ID)
+    .order('date', { ascending: false })
     .order('created_at', { ascending: false })
     .limit(limit);
 
@@ -31,10 +34,10 @@ export default async function TransportPage() {
       </div>
 
       <div className="space-y-4">
-        {records.map((r) => {
+        {records.map((r: any) => {
           const vehicle = r.vehicle as any;
           const delivery = r.delivery as any;
-          const date = delivery?.date || new Date().toLocaleDateString('en-CA');
+          const date = r.date || delivery?.date || new Date().toLocaleDateString('en-CA');
           const materialName = delivery?.material?.name || '';
 
           return (
@@ -48,7 +51,7 @@ export default async function TransportPage() {
               icon="🚚"
               onDelete={async () => {
                 'use server';
-                await deleteRecord('transport_records', r.id);
+                await deleteRecord('transport_trips', r.id);
               }}
             />
           );

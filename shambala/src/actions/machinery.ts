@@ -14,10 +14,10 @@ export async function createMachineryRecord(
 
   const { error } = await supabase.from('machinery_records').insert({
     project_id: DEFAULT_PROJECT_ID,
-    machine_id: data.machine_id,
+    machine_id: data.machine_id!,
     operator_id: data.operator_id || null,
     building_id: data.building_id || null,
-    date: data.date,
+    date: data.date!,
     start_time: data.start_time || null,
     end_time: data.end_time || null,
     hours: data.hours || null,
@@ -31,16 +31,16 @@ export async function createMachineryRecord(
   if (fuelData) {
     const { error: fuelError } = await supabase.from('fuel_records').insert({
       project_id: DEFAULT_PROJECT_ID,
-      machine_id: data.machine_id,
+      machine_id: data.machine_id!,
       building_id: data.building_id || null,
-      fuel_type: fuelData.fuel_type,
-      quantity: fuelData.quantity,
+      fuel_type: fuelData.fuel_type!,
+      quantity: fuelData.quantity!,
       unit: fuelData.unit || 'Liters',
       rate: fuelData.rate || null,
       amount: fuelData.amount || null,
       previous_meter: fuelData.previous_meter || null,
       current_meter: fuelData.current_meter || null,
-      date: data.date,
+      date: data.date!,
       provider_id: fuelData.provider_id || null,
       comments: fuelData.comments || null,
     });
@@ -49,7 +49,7 @@ export async function createMachineryRecord(
     if (fuelData.amount && fuelData.amount > 0) {
       const fuelExpenseLedgerId = await getLedgerId('Machine Fuel Expense');
       const supplierPayableLedgerId = await getLedgerId('Supplier Payable');
-      
+
       await postVoucher({
         voucher_no: `JV-FUEL-${Date.now()}`,
         type: 'Journal',
@@ -119,16 +119,16 @@ export async function createFuelRecord(data: Partial<FuelRecord> & { account_id?
 
   const { error } = await supabase.from('fuel_records').insert({
     project_id: DEFAULT_PROJECT_ID,
-    machine_id: data.machine_id,
+    machine_id: data.machine_id!,
     building_id: data.building_id || null,
-    fuel_type: data.fuel_type,
-    quantity: data.quantity,
+    fuel_type: data.fuel_type!,
+    quantity: data.quantity!,
     unit: data.unit || 'Litres',
     rate: data.rate || null,
     amount: data.amount || null,
     previous_meter: data.previous_meter || null,
     current_meter: data.current_meter || null,
-    date: data.date,
+    date: data.date!,
     provider_id: data.provider_id || null,
     comments: data.comments || null,
   });

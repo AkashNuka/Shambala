@@ -11,11 +11,11 @@ export async function createLabourRecord(data: Partial<LabourRecord> & { account
 
   const { data: record, error } = await supabase.from('labour_records').insert({
     project_id: DEFAULT_PROJECT_ID,
-    worker_id: data.worker_id,
+    worker_id: data.worker_id!,
     worker_type_id: data.worker_type_id,
     work_type_id: data.work_type_id,
     building_id: data.building_id,
-    date: data.date,
+    date: data.date!,
     time: data.time || null,
     amount: data.amount || null,
     cash_provider_id: data.cash_provider_id || null,

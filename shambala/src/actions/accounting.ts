@@ -43,7 +43,7 @@ export async function postVoucher(params: PostVoucherParams) {
     p_reference_table: params.reference_table || null,
     p_reference_id: params.reference_id || null,
     p_lines: params.lines
-  });
+  } as any);
 
   if (error) {
     console.error('Accounting engine post error:', error);

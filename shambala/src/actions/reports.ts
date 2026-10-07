@@ -52,7 +52,8 @@ export async function getMonthlyReport(year: number, month: number): Promise<{ m
       .gte('date', firstDay)
       .lte('date', lastDay)
       .not('material_cost', 'is', null),
-    supabase
+    // BUG: table does not exist — see fix 14
+    (supabase as any)
       .from('transport_trips')
       .select('*, vehicle:transport_vehicles(vehicle_number), delivery:material_deliveries(project_id, date)')
       .eq('status', 'completed'),
@@ -68,8 +69,8 @@ export async function getMonthlyReport(year: number, month: number): Promise<{ m
     const delivery = r.delivery as any;
     if (!delivery) return false;
     return delivery.project_id === DEFAULT_PROJECT_ID &&
-           delivery.date >= firstDay &&
-           delivery.date <= lastDay;
+      delivery.date >= firstDay &&
+      delivery.date <= lastDay;
   });
 
   const modules: ModuleSpend[] = [

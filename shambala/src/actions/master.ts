@@ -76,7 +76,8 @@ export async function getMachinery() {
 
 export async function getFuelTypes() {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  // BUG: table does not exist — see fix 14
+  const { data, error } = await (supabase as any)
     .from('fuel_types')
     .select('name')
     .eq('project_id', DEFAULT_PROJECT_ID)

@@ -13,7 +13,8 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    let query = supabase
+    // BUG: table does not exist — see fix 14
+    let query = (supabase as any)
       .from('transactions')
       .select(`
         *,

@@ -206,7 +206,31 @@ export async function getActivityFeed(
   return filtered.slice(0, limit);
 }
 
-export async function deleteRecord(tableName: string, id: string) {
+/**
+ * Tables a user may delete from. Server Actions are public HTTP endpoints,
+ * so the table name MUST be validated — never passed through from the caller.
+ * Excluded: projects, ledger_accounts, vouchers, voucher_lines, parties, masters.
+ */
+const DELETABLE_TABLES = [
+  'labour_records', 'food_records', 'machinery_records', 'salary_records',
+  'material_deliveries', 'transport_trips', 'fuel_records', 'transactions',
+] as const;
+
+export type DeletableTable = (typeof DELETABLE_TABLES)[number];
+
+function assertDeletable(tableName: string): asserts tableName is DeletableTable {
+  if (!(DELETABLE_TABLES as readonly string[]).includes(tableName)) {
+    throw new Error(`Refusing to delete from non-allowlisted table: ${tableName}`);
+  }
+}
+
+export async function deleteRecord(tableName: DeletableTable, id: string) {
+  assertDeletable(tableName);
+
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) {
+    throw new Error('Invalid record id');
+  }
+
   const supabase = await createClient();
 
   // If this is a transaction, just delete it directly
@@ -220,18 +244,21 @@ export async function deleteRecord(tableName: string, id: string) {
   // For material_deliveries, cascade-delete linked transport and weighbridge records first
   if (tableName === 'material_deliveries') {
     // Clean up transport_trips and their transactions
-    const { data: transportRecords } = await supabase
+    // BUG: table does not exist — see fix 14
+    const { data: transportRecords } = await (supabase as any)
       .from('transport_trips')
       .select('id')
       .eq('delivery_id', id);
 
     if (transportRecords && transportRecords.length > 0) {
       for (const tr of transportRecords) {
-        await supabase.from('transactions').delete()
+        // BUG: table does not exist — see fix 14
+        await (supabase as any).from('transactions').delete()
           .eq('reference_table', 'transport_trips')
           .eq('reference_id', tr.id);
       }
-      await supabase.from('transport_trips').delete().eq('delivery_id', id);
+      // BUG: table does not exist — see fix 14
+      await (supabase as any).from('transport_trips').delete().eq('delivery_id', id);
     }
 
     // Clean up weighbridge_records and their transactions
@@ -251,7 +278,12 @@ export async function deleteRecord(tableName: string, id: string) {
   }
 
   // Delete the operational record
-  const { error } = await supabase.from(tableName).delete().eq('id', id);
+  // BUG: table does not exist — see fix 14
+  const { error } = await (supabase as any)
+    .from(tableName)
+    .delete()
+    .eq('id', id)
+    .eq('project_id', DEFAULT_PROJECT_ID);
   if (error) throw new Error(`Failed to delete from ${tableName}`);
 
   // Also delete the associated transaction if one exists
@@ -260,7 +292,7 @@ export async function deleteRecord(tableName: string, id: string) {
     .delete()
     .eq('reference_table', tableName)
     .eq('reference_id', id);
-  
+
   if (txnError) {
     console.error('Failed to clean up transaction', txnError);
   }

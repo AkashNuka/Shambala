@@ -17,7 +17,7 @@ export async function getParties(search?: string, role?: string): Promise<Party[
   if (search) {
     query = query.ilike('name', `%${search}%`);
   }
-  
+
   if (role) {
     query = query.eq('role', role);
   }
@@ -34,7 +34,7 @@ export async function createParty(data: Partial<Party>): Promise<Party> {
     .from('parties')
     .insert({
       project_id: DEFAULT_PROJECT_ID,
-      name: data.name?.trim(),
+      name: data.name?.trim() || '',
       class: data.class || 'person',
       role: data.role || 'general',
       worker_type_id: data.worker_type_id || null,
@@ -53,7 +53,7 @@ export async function updateParty(id: string, data: Partial<Party>): Promise<Par
 
   const { data: party, error } = await supabase
     .from('parties')
-    .update(data)
+    .update(data as any)
     .eq('id', id)
     .select()
     .single();
@@ -76,7 +76,7 @@ export async function getParty(id: string): Promise<Party> {
 
 export async function getPartyTransactions(partyId: string, dateFrom?: string, dateTo?: string) {
   const supabase = await createClient();
-  
+
   // Get all transactions where this party is involved
   let query = supabase
     .from('transactions')

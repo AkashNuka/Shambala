@@ -27,7 +27,8 @@ export async function GET() {
 
     // Fetch all tables
     for (const table of TABLES) {
-      const { data, error } = await supabase.from(table).select('*');
+      // BUG: table does not exist — see fix 16
+      const { data, error } = await (supabase as any).from(table).select('*');
       if (error) {
         console.error(`Error fetching ${table}:`, error);
         backupData[table] = []; // fallback

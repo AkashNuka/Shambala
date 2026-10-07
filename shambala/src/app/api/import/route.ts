@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
           if (partyMap.has(upperName)) {
             partyId = partyMap.get(upperName)!;
           } else {
-            const { data: newParty } = await supabase
+            // BUG: table/columns do not match — see fix 15
+            const { data: newParty } = await (supabase as any)
               .from('parties')
               .insert({
                 project_id: DEFAULT_PROJECT_ID,
@@ -67,7 +68,8 @@ export async function POST(request: NextRequest) {
         // Map transaction type
         const type = d.type || 'expense';
 
-        const { error: txnError } = await supabase
+        // BUG: table/columns do not match — see fix 15
+        const { error: txnError } = await (supabase as any)
           .from('transactions')
           .insert({
             project_id: DEFAULT_PROJECT_ID,

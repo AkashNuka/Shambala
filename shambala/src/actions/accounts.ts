@@ -28,72 +28,37 @@ export async function getAccounts(): Promise<any[]> {
 export async function getAccountBalances(): Promise<AccountBalance[]> {
   const supabase = await createClient();
 
-  // Get Cash and Bank ledger accounts
-  const { data: ledgers, error: accError } = await supabase
-    .from('ledger_accounts')
-    .select('*')
+  // Aggregated in Postgres — see migration 008. Do not fetch raw voucher_lines
+  // and sum in JS; PostgREST truncates at 1000 rows.
+  const { data, error } = await (supabase as any)
+    .from('ledger_balances')
+    .select('ledger_id, name, balance')
     .eq('project_id', DEFAULT_PROJECT_ID)
-    .in('name', ['Cash', 'Bank']);
+    .in('name', ['Cash', 'Bank'])
+    .order('name');
 
-  if (accError) throw new Error(accError.message);
+  if (error) throw new Error(error.message);
 
-  const ledgerIds = (ledgers || []).map(l => l.id);
-  
-  if (ledgerIds.length === 0) return [];
-
-  const { data: lines, error: lineError } = await supabase
-    .from('voucher_lines')
-    .select('ledger_id, debit, credit')
-    .in('ledger_id', ledgerIds);
-
-  if (lineError) throw new Error(lineError.message);
-
-  const balances: AccountBalance[] = (ledgers || []).map(l => {
-    let balance = 0;
-    const lLines = (lines || []).filter(line => line.ledger_id === l.id);
-    for (const line of lLines) {
-      if (l.normal_balance === 'Debit') {
-        balance += (line.debit - line.credit);
-      } else {
-        balance += (line.credit - line.debit);
-      }
-    }
-    return {
-      account_id: l.id,
-      account_name: l.name,
-      account_type: l.name.toLowerCase(), // 'cash' or 'bank'
-      balance,
-    };
-  });
-
-  return balances;
+  return (data || []).map((l: any) => ({
+    account_id: l.ledger_id,
+    account_name: l.name,
+    account_type: l.name.toLowerCase(),
+    balance: Number(l.balance) || 0,
+  }));
 }
 
 export async function getThisMonthSpent(): Promise<number> {
   const supabase = await createClient();
-
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  
-  const firstDay = `${year}-${month}-01`;
-  const lastDate = new Date(year, now.getMonth() + 1, 0).getDate();
-  const lastDay = `${year}-${month}-${String(lastDate).padStart(2, '0')}`;
+  const firstDay = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
 
-  const { data, error } = await supabase
-    .from('voucher_lines')
-    .select(`
-      debit,
-      credit,
-      vouchers!inner(date),
-      ledger_accounts!inner(account_group)
-    `)
-    .eq('ledger_accounts.account_group', 'Expense')
-    .gte('vouchers.date', firstDay)
-    .lte('vouchers.date', lastDay);
+  const { data, error } = await (supabase as any)
+    .from('monthly_expense_totals')
+    .select('total')
+    .eq('project_id', DEFAULT_PROJECT_ID)
+    .eq('month', firstDay)
+    .maybeSingle();
 
   if (error) throw new Error(error.message);
-  
-  // Expenses have normal balance Debit, so net expense = sum(debit) - sum(credit)
-  return (data || []).reduce((sum, line) => sum + (Number(line.debit) - Number(line.credit)), 0);
+  return Number(data?.total) || 0;
 }
